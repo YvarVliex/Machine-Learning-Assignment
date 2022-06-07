@@ -1,47 +1,12 @@
+#save_preprocessed_data should be run once to generate the preprocessed data and afterwards load_preprocessed_data can be run to get the data
+
+
 import pandas as pd
 import csv, sys
 from matplotlib import pyplot as plt
 import shapefile as shp
 import numpy as np
 from datetime import datetime as dt
-
-#makes it possible to read large csv rows
-# maxInt = sys.maxsize
-# while True:
-# 	# decrease the maxInt value by factor 10
-# 	# as long as the OverflowError occurs.
-# 	try:
-# 		csv.field_size_limit(maxInt)
-# 		break
-# 	except OverflowError:
-# 		maxInt = int(maxInt/10)
-#
-
-# def read_taxi_zones_csv(filename):
-# 	raw_data = []
-# 	with open(filename, newline='') as csvfile:
-# 		taxi_zones_reader = csv.reader(csvfile, delimiter=',')
-# 		for row in taxi_zones_reader:
-# 			raw_data.append(row)
-#
-# 	#process polygon data
-# 	processed_data = raw_data[:]
-# 	for i in range(1, len(raw_data)):
-# 		raw_polygon_data = raw_data[i][2]
-# 		print(raw_polygon_data)
-# 		polygon_data = raw_polygon_data[16:-3].split(', ')
-# 		print(polygon_data)
-# 		polygon_float_points = []
-# 		for point_string in polygon_data:
-# 			split_point_string = point_string.split(' ')
-# 			point_float = (float(split_point_string[0]), float(split_point_string[1]))
-# 			polygon_float_points.append(point_float)
-#
-# 		processed_data[i][2] = polygon_float_points
-#
-#
-# 	return processed_data
-
 
 def read_taxi_zones_shape_file(filename):
 	shapefile = shp.Reader(filename)
@@ -139,47 +104,42 @@ def preprocess_trip_data(trip_db, center_points, start_month_string, end_month_s
 # 	#split based on pickup time
 #
 # 	pass
-#
-# def extract_rel_data(timeslot_data, center_points):
-#
-#
-# 	pass
+
+
+
+def save_preprocessed_data():
+	filename = 'taxis.parquet'
+
+	trip_db = pd.read_parquet(filename)
+
+	taxi_zones_shape_data = read_taxi_zones_shape_file('taxi_zones_shape_files/taxi_zones.shp')
+
+	center_points = determine_centers_of_districts(taxi_zones_shape_data)
+
+	start_month = '2020-01'
+	end_month = '2020-01'
+	proc_trip_data = preprocess_trip_data(trip_db, center_points, start_month, end_month)
+	np.save('processed_trip_data_1', proc_trip_data)
+
+def load_preprocessed_data():
+	return np.load('processed_trip_data_1.npy')
 
 
 
 if __name__ == '__main__':
 	# filename = 'yellow_tripdata_2022-01.parquet'
-	filename = 'yellow_tripdata_2020-01.parquet'
+	# filename = 'yellow_tripdata_2020-01.parquet'
 	# filename = 'fhv_tripdata_2022-01.parquet'
 
-
-
-
-
+	#plotting stuff
+	filename = 'taxis.parquet'
 	trip_db = pd.read_parquet(filename)
-
-	# taxi_zones_data = read_taxi_zones('taxi_zones.csv')
-
 	taxi_zones_shape_data = read_taxi_zones_shape_file('taxi_zones_shape_files/taxi_zones.shp')
-
-
 	center_points = determine_centers_of_districts(taxi_zones_shape_data)
-
 	# plot_taxi_zones(taxi_zones_shape_data, center_points)
 
-	# start_month = '2020-01'
-	# end_month = '2020-01'
-	# proc_trip_data = preprocess_trip_data(trip_db, center_points, start_month, end_month)
-	# np.save('processed_trip_data_1',proc_trip_data)
 
 
-
-	proc_trip_data = np.load('processed_trip_data_1.npy')
-	x_points = proc_trip_data[:,2]
-	y_points = proc_trip_data[:,3]
-
-	plt.plot(x_points, y_points, '.')
-	plt.show()
 
 
 
