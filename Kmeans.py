@@ -4,7 +4,8 @@ Created on Wed Jun  8 08:54:05 2022
 
 @author: cavaw
 """
-
+import os
+os.environ["OMP_NUM_THREADS"] = "1"
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -24,7 +25,7 @@ center_points = determine_centers_of_districts(taxi_zones_shape_data)
 X = pd.DataFrame(dataset, columns=['hour', 'day', 'xloc', 'yloc'])
 #print(X)
 X_red = X.iloc[:,2:4].to_numpy()
-#print(X_red)
+# print(X_red)
 
 #%%
 
@@ -46,7 +47,7 @@ X_red = X.iloc[:,2:4].to_numpy()
 
 #%%
 
-clusters = 3
+clusters = 4
 
 # Apply KMeans on the relevant columns of data (lat and lon)
 kmeans = KMeans(n_clusters=clusters).fit(X_red)
