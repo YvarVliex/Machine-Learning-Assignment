@@ -146,6 +146,8 @@ if __name__ == '__main__':
 	# filename = 'yellow_tripdata_2020-01.parquet'
 	# filename = 'fhv_tripdata_2022-01.parquet'
 
+# test = load_preprocessed_data()
+# print(test)
 	#plotting stuff
 	filename = 'taxis.parquet'
 	trip_db = pd.read_parquet(filename)
@@ -162,4 +164,5 @@ if __name__ == '__main__':
 
 	# timeslot_data = split_data_into_timeslots(timeslot_length, trip_db)
 
+#save_preprocessed_data()
 
