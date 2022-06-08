@@ -7,6 +7,7 @@ from matplotlib import pyplot as plt
 import shapefile as shp
 import numpy as np
 from datetime import datetime as dt
+from tqdm import tqdm
 
 def read_taxi_zones_shape_file(filename):
 	shapefile = shp.Reader(filename)
@@ -53,9 +54,10 @@ def determine_centers_of_districts(taxi_zones_shape_data):
 	return centers
 
 def preprocess_trip_data(trip_db, center_points, start_month_string, end_month_string):
+	print('start preprocessing of data')
 	# process data from trip_db
 	# get relevant data from preprocessed and split data
-	# feature = time hour, day of the week, pointx, pointy, #ToDo: fill in
+	# feature = time hour, day of the week, pointx, pointy, number of passengers, trip duration (in seconds)
 
 	proc_trip_data = []
 	# sort based on pickup time
@@ -68,14 +70,14 @@ def preprocess_trip_data(trip_db, center_points, start_month_string, end_month_s
 	end_month = int(end_month_string[5:])
 
 
-	#ToDo: remove data points started before the start month or after the end month
-	for datapoint in trip_db.iloc:
-		timestamp = datapoint.tpep_pickup_datetime
-		month = timestamp.month
-		year = timestamp.year
+	for i in tqdm(range(len(trip_db))):
+		datapoint = trip_db.iloc[i]
+		timestamp_pu = datapoint.tpep_pickup_datetime
+		month = timestamp_pu.month
+		year = timestamp_pu.year
 		if end_year >= year >= start_year and end_month >= month >= start_month:
-			hour_of_day = timestamp.hour
-			day_of_week = timestamp.dayofweek
+			hour_of_day = timestamp_pu.hour
+			day_of_week = timestamp_pu.dayofweek
 
 			pu_loc_id = datapoint.PULocationID
 			try:
@@ -87,7 +89,18 @@ def preprocess_trip_data(trip_db, center_points, start_month_string, end_month_s
 			pu_x = pu_xy[0]
 			pu_y = pu_xy[1]
 
-			proc_data_point = np.array([hour_of_day, day_of_week, pu_x, pu_y])
+
+			try:
+				n_pas = int(datapoint.passenger_count)
+			except ValueError:
+				#number of passengers is invalid
+				continue
+
+			timestamp_do = datapoint.tpep_dropoff_datetime
+			trip_dur = int((timestamp_do-timestamp_pu).seconds)
+
+
+			proc_data_point = np.array([hour_of_day, day_of_week, pu_x, pu_y, n_pas, trip_dur])
 
 			proc_trip_data.append(proc_data_point)
 
@@ -119,10 +132,12 @@ def save_preprocessed_data():
 	start_month = '2020-01'
 	end_month = '2020-01'
 	proc_trip_data = preprocess_trip_data(trip_db, center_points, start_month, end_month)
-	np.save('processed_trip_data_1', proc_trip_data)
+
+	np.save('processed_trip_data_2',proc_trip_data)
+
 
 def load_preprocessed_data():
-	return np.load('processed_trip_data_1.npy')
+	return np.load('processed_trip_data_2.npy')
 
 
 
@@ -138,8 +153,10 @@ if __name__ == '__main__':
 	center_points = determine_centers_of_districts(taxi_zones_shape_data)
 	# plot_taxi_zones(taxi_zones_shape_data, center_points)
 
+	# save_preprocessed_data()
 
-
+	# data = load_preprocessed_data()
+	# print(data)
 
 
 
