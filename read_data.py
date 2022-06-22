@@ -72,6 +72,11 @@ def preprocess_trip_data(trip_db, center_points, start_month_string, end_month_s
 
 	for i in tqdm(range(len(trip_db))):
 		datapoint = trip_db.iloc[i]
+		vendorID = datapoint.VendorID
+		if vendorID == 2:
+			# data from Vendor 2 is not considered accurate because a lot of timestamps from vendor 2 were clearly wrong
+			continue
+
 		timestamp_pu = datapoint.tpep_pickup_datetime
 		month = timestamp_pu.month
 		year = timestamp_pu.year
@@ -100,6 +105,12 @@ def preprocess_trip_data(trip_db, center_points, start_month_string, end_month_s
 				continue
 
 			timestamp_do = datapoint.tpep_dropoff_datetime
+
+			if (timestamp_pu.second == 0 and timestamp_pu.hour == 0 and timestamp_pu.minute == 0) or (timestamp_do.second == 0 and timestamp_do.hour == 0 and timestamp_do.minute == 0):
+				#one of the timestamps is at midnight, which is assumed to be incorrect
+				continue
+
+
 			trip_dur = int((timestamp_do - timestamp_pu).seconds)
 
 			proc_data_point = np.array([hour_of_day, day_of_week, pu_x, pu_y, n_pas, trip_dur, do_x, do_y])
@@ -131,11 +142,11 @@ def save_preprocessed_data():
 	end_month = '2020-01'
 	proc_trip_data = preprocess_trip_data(trip_db, center_points, start_month, end_month)
 
-	np.save('processed_trip_data_3', proc_trip_data)
+	np.save('processed_trip_data_5', proc_trip_data)
 
 
 def load_preprocessed_data():
-	return np.load('processed_trip_data_3.npy')
+	return np.load('processed_trip_data_5.npy')
 
 
 if __name__ == '__main__':
@@ -146,15 +157,33 @@ if __name__ == '__main__':
 	# plotting stuff
 	filename = 'taxis.parquet'
 	trip_db = pd.read_parquet(filename)
+
 	taxi_zones_shape_data = read_taxi_zones_shape_file('taxi_zones_shape_files/taxi_zones.shp')
 	center_points = determine_centers_of_districts(taxi_zones_shape_data)
 	# plot_taxi_zones(taxi_zones_shape_data, center_points)
 
-	save_preprocessed_data()
+	# save_preprocessed_data()
 
-	# data = load_preprocessed_data()
-	# print(data)
+	data = load_preprocessed_data()
+	
+	#
+	# vendorIDs = data[:,8]
+	# trip_durs_v1 = data[:,5][vendorIDs==1]
+	# trip_durs_v2 = data[:, 5][vendorIDs == 2]
+	#
+	# hours_v1 = data[:,0][vendorIDs==1]
+	# hours_v2 = data[:, 0][vendorIDs == 2]
+	#
+	#
+	# print(f'amount of datapoints for vendor 1',len(hours_v1))
+	# print(f'which is',round(len(hours_v1)/len(data),5),'of the whole dataset')
+	# plt.scatter(hours_v1, trip_durs_v1)
+	# plt.show()
 
-# timeslot_data = split_data_into_timeslots(timeslot_length, trip_db)
 
-# save_preprocessed_data()
+	#
+
+
+	# timeslot_data = split_data_into_timeslots(timeslot_length, trip_db)
+
+	# save_preprocessed_data()
