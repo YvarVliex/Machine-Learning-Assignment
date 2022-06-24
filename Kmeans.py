@@ -24,14 +24,12 @@ center_points = determine_centers_of_districts(taxi_zones_shape_data)
 
 
 X = pd.DataFrame(dataset, columns=['hour', 'day', 'xloc', 'yloc'])
-#print(X)
 X_red = X.iloc[:,2:4].to_numpy()
-# print(X_red)
 
 #%%
 # Apply the elbow method to determine good amount of clusters
 
-max_clusters = 5
+max_clusters = 12
 # Decide on number of clusters
 wcss = []
 for i in range(1,max_clusters+1):
@@ -48,27 +46,42 @@ plt.show()
 #%%
 
 # number of clusters
-clusters = 5
+clusters =4
 
-# Apply KMeans on the relevant columns of data (lat and lon)
+# Apply KMeans on the relevant columns of data (lat and lon of pickup)
 kmeans = KMeans(n_clusters=clusters).fit(X_red)
 
-X_ass = [X_red, kmeans.labels_]
+X_ass = [X_red, np.transpose(kmeans.labels_)]
 centroids = pd.DataFrame(kmeans.cluster_centers_, columns = ['xloc', 'yloc'])
+
 #%%
-#Plot the final clusters and their centroids 
-# colors = {0:'red', 1:'blue', 2:'green', 3:'yellow'}
+#Plot the final clusters and their centroids
+
+#colors = ['red', 'blue', 'green', 'purple', 'orange']
 colors = plt.cm.get_cmap('hsv', clusters)
 colors2 = [mcolors.rgb2hex(colors(i)) for i in range(colors.N)]
-print(colors2)
-#plt.figure()
 
+y_kmeans = kmeans.labels_
+x_column = 0
+y_column = 1
+
+
+#plot taxi districts
 for shape, center in zip(taxi_zones_shape_data.shapeRecords(), center_points):
 	x = [i[0] for i in shape.shape.points[:]]
 	y = [i[1] for i in shape.shape.points[:]]
-	plt.plot(x, y, c = 'k', linewidth=0.5, zorder = 1)
-    
-plt.scatter(centroids.iloc[:,0], centroids.iloc[:,1],  marker = 'o', s=70,
-           c = centroids.index.map(lambda x: 'red'), zorder = 2)
+	plt.plot(x, y, c = 'k', linewidth=0.3, zorder = 1)
+
+#plot each pick up point with a color corresponding to its cluster
+for i in range(clusters):    
+    plt.scatter(X_red[y_kmeans == i, x_column], X_red[y_kmeans == i,y_column],s=20,c=colors2[i])
+
+#plot all cluster centers in yellow/black
+plt.scatter(centroids.iloc[:,0], centroids.iloc[:,1],  marker = 'o', s=80,
+           c = centroids.index.map(lambda x: 'k'), zorder = 2)
+plt.scatter(centroids.iloc[:,0], centroids.iloc[:,1],  marker = 'o', s=50,
+           c = centroids.index.map(lambda x: 'yellow'), zorder = 3)
 plt.title('Optimal Locations for Dispatch Centers')
+plt.xlabel('longitude')
+plt.ylabel('latitude')
 plt.show()
