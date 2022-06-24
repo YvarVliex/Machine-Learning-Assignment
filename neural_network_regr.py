@@ -10,7 +10,7 @@ from scipy import stats
 from matplotlib import pyplot as plt
 
 """Load data"""
-dataset = np.load('processed_trip_data_3.npy')
+dataset = np.load('processed_trip_data_5.npy')
 data = pd.DataFrame(dataset)
 
 
@@ -50,20 +50,20 @@ print(data)
 data = data[(np.abs(stats.zscore(data)) < 3).all(axis=1)]
 
 "randomize order of rows"
-# data = data.sample(frac=1)
+data = data.sample(frac=1)
 
 
 "Split data in input and output"
-X = data.iloc[:,0:8:]
+X = data.iloc[:,0:5:]
 Y = data.iloc[:,8:9:]
 
-# "normalize data"
-# d = preprocessing.normalize(X, axis=0)
-# df = pd.DataFrame(d)
-# df[2] = [-x for x in df[2]]
+"normalize data"
+d = preprocessing.normalize(X, axis=0)
+df = pd.DataFrame(d)
+df[2] = [-x for x in df[2]]
 # df[6] = [-x for x in df[6]]
 
-# print(Y.describe())
+print(Y.describe())
 
 X_new = X.iloc[:100000]
 Y_new = Y.iloc[:100000]
@@ -78,43 +78,25 @@ print("Datapoints in Test set:",len(Xtest))
 
 
 
-# """ sklearn model """
-# neural_net = MLPRegressor(max_iter=3000, hidden_layer_sizes=8, activation="relu").fit(Xtrain, Ytrain)
-# print('model is fitted')
-# pred = neural_net.predict(Xtest)
-# mae = mean_absolute_error(pred, Ytest)
-# mse = mean_squared_error(pred, Ytest, squared=False)
-#
-# print(f"The MAE of this network is  {mae}")
-# print(f"The RMSE of this network is {mse}")
-#
-# # """Multiple Linear Regression"""
-# LR = LinearRegression()
-# LR.fit(Xtrain, Ytrain)
-# pred_reg = LR.predict(Xtest)
-# mae_reg = mean_absolute_error(pred_reg, Ytest)
-# mse_reg = mean_squared_error(pred_reg, Ytest, squared=False)
-#
-# print("Linear Regression Results")
-# print(f"The MAE of this network is  {mae_reg}")
-# print(f"The MSE of this network is {mse_reg}")
-#
+""" sklearn model """
+neural_net = MLPRegressor(max_iter=3000, hidden_layer_sizes=8, activation="relu").fit(Xtrain, Ytrain)
+print('model is fitted')
+pred = neural_net.predict(Xtest)
+mae = mean_absolute_error(pred, Ytest)
+mse = mean_squared_error(pred, Ytest, squared=False)
 
-sizes, training_scores, testing_scores = learning_curve(MLPRegressor(max_iter=5000, hidden_layer_sizes=8, activation="relu"), X_new, Y_new, cv=10, scoring='neg_root_mean_squared_error', train_sizes=np.linspace(0.01, 1.0, 50))
-mean_training = np.mean(training_scores, axis=1)
-Standard_Deviation_training = np.std(training_scores, axis=1)
+print(f"The MAE of this network is  {mae}")
+print(f"The RMSE of this network is {mse}")
 
-# Mean and Standard Deviation of testing scores
-mean_testing = np.mean(testing_scores, axis=1)
-Standard_Deviation_testing = np.std(testing_scores, axis=1)
+# """Multiple Linear Regression"""
+LR = LinearRegression()
+LR.fit(Xtrain, Ytrain)
+pred_reg = LR.predict(Xtest)
+mae_reg = mean_absolute_error(pred_reg, Ytest)
+mse_reg = mean_squared_error(pred_reg, Ytest, squared=False)
 
-# dotted blue line is for training scores and green line is for cross-validation score
-plt.plot(sizes, mean_training, '--', color="b", label="Training score")
-plt.plot(sizes, mean_testing, color="g", label="Cross-validation score")
+print("Linear Regression Results")
+print(f"The MAE of this network is  {mae_reg}")
+print(f"The MSE of this network is {mse_reg}")
 
-# Drawing plot
-plt.title("LEARNING CURVE FOR KNN Classifier")
-plt.xlabel("Training Set Size"), plt.ylabel("Accuracy Score"), plt.legend(loc="best")
-plt.tight_layout()
-plt.show()
 
